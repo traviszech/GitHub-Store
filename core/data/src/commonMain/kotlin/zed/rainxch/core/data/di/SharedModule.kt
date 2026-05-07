@@ -23,6 +23,7 @@ import zed.rainxch.core.data.download.MultiSourceDownloaderImpl
 import zed.rainxch.core.data.download.SlowDownloadDetectorImpl
 import zed.rainxch.core.data.services.BuildKonfigAppVersionInfo
 import zed.rainxch.core.data.services.DefaultDownloadOrchestrator
+import zed.rainxch.core.data.services.DefaultSystemInstallSerializer
 import zed.rainxch.core.data.data_source.impl.DefaultTokenStore
 import zed.rainxch.core.data.local.db.AppDatabase
 import zed.rainxch.core.data.local.db.dao.CacheDao
@@ -70,6 +71,7 @@ import zed.rainxch.core.domain.network.ProxyTester
 import zed.rainxch.core.domain.network.SlowDownloadDetector
 import zed.rainxch.core.domain.system.AppVersionInfo
 import zed.rainxch.core.domain.system.DownloadOrchestrator
+import zed.rainxch.core.domain.system.SystemInstallSerializer
 import zed.rainxch.core.domain.system.ExternalAppScanner
 import zed.rainxch.core.domain.system.MultiSourceDownloader
 import zed.rainxch.core.domain.repository.AnnouncementsCacheStore
@@ -307,7 +309,18 @@ val coreModule =
                 pendingInstallNotifier = get(),
                 slowDownloadDetector = get(),
                 appScope = get(),
+                systemInstallSerializer = get(),
             )
+        }
+
+        // Single-flight gate over `installer.install` calls that
+        // delegate to the system installer dialog. Without this,
+        // sequential update flows fire stacked ACTION_VIEW intents
+        // and OEM PackageInstaller activities (Xiaomi, OPPO, vivo,
+        // Honor, Samsung variants) routinely fail to refresh — the
+        // second dialog keeps showing the first APK.
+        single<SystemInstallSerializer> {
+            DefaultSystemInstallSerializer()
         }
     }
 
