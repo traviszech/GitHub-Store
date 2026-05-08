@@ -341,6 +341,17 @@ class TweaksRepositoryImpl(
         }
     }
 
+    override fun getBatteryOptimizationPromptDismissed(): Flow<Boolean> =
+        preferences.data.map { prefs ->
+            prefs[BATTERY_OPT_PROMPT_DISMISSED_KEY] ?: false
+        }
+
+    override suspend fun setBatteryOptimizationPromptDismissed(dismissed: Boolean) {
+        preferences.edit { prefs ->
+            prefs[BATTERY_OPT_PROMPT_DISMISSED_KEY] = dismissed
+        }
+    }
+
     override fun getLastSeenWhatsNewVersionCode(): Flow<Int?> =
         preferences.data.map { prefs ->
             prefs[LAST_SEEN_WHATS_NEW_VERSION_CODE_KEY]
@@ -434,6 +445,7 @@ class TweaksRepositoryImpl(
         private val EXTERNAL_MATCH_SEARCH_ENABLED_KEY = booleanPreferencesKey("external_match_search_enabled")
         private val EXTERNAL_IMPORT_BANNER_DISMISSED_AT_KEY = intPreferencesKey("external_import_banner_dismissed_at")
         private val APK_INSPECT_COACHMARK_SHOWN_KEY = booleanPreferencesKey("apk_inspect_coachmark_shown")
+        private val BATTERY_OPT_PROMPT_DISMISSED_KEY = booleanPreferencesKey("battery_opt_prompt_dismissed")
         private val LAST_SEEN_WHATS_NEW_VERSION_CODE_KEY = intPreferencesKey("last_seen_whats_new_version_code")
         private val ANNOUNCEMENTS_DISMISSED_IDS_KEY = stringSetPreferencesKey("announcements_dismissed_ids")
         private val ANNOUNCEMENTS_ACKNOWLEDGED_IDS_KEY = stringSetPreferencesKey("announcements_acknowledged_ids")

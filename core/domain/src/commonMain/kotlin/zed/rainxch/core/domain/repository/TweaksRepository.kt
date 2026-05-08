@@ -113,6 +113,17 @@ interface TweaksRepository {
 
     suspend fun setApkInspectCoachmarkShown(shown: Boolean)
 
+    /**
+     * One-shot watermark for the battery-optimization prompt on
+     * aggressive-OEM ROMs (Oppo / OnePlus / Realme / Xiaomi / vivo /
+     * Honor). `false` until the user has either granted the exemption
+     * or explicitly dismissed the prompt; flips to `true` afterwards
+     * and is never re-shown.
+     */
+    fun getBatteryOptimizationPromptDismissed(): Flow<Boolean>
+
+    suspend fun setBatteryOptimizationPromptDismissed(dismissed: Boolean)
+
     fun getLastSeenWhatsNewVersionCode(): Flow<Int?>
 
     suspend fun setLastSeenWhatsNewVersionCode(versionCode: Int)
