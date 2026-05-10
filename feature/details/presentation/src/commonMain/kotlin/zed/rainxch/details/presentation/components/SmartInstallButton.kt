@@ -250,6 +250,20 @@ fun SmartInstallButton(
                 stringResource(Res.string.install_version, normSelected)
             }
 
+            // Not installed yet, but the user reached for the release picker
+            // and chose something other than the newest available release —
+            // the CTA should reflect *which* version will install instead of
+            // misleading them with "Install latest". The latest tag comes
+            // from the head of `allReleases` (GitHub returns newest-first
+            // by `published_at`); fall through to "Install latest" only when
+            // we genuinely can't tell, or the user is already on the head.
+            normSelected != null &&
+                state.allReleases.firstOrNull()?.tagName?.let { latestTag ->
+                    !VersionMath.isExactSameVersion(latestTag, normSelected)
+                } == true -> {
+                stringResource(Res.string.install_version, normSelected)
+            }
+
             else -> {
                 stringResource(Res.string.install_latest)
             }
