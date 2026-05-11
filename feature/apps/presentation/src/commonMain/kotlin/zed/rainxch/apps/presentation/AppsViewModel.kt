@@ -189,13 +189,20 @@ class AppsViewModel(
 
     private fun checkAllForUpdates() {
         viewModelScope.launch {
-            _state.update { it.copy(isCheckingForUpdates = true) }
+            // Stamp the timestamp at launch start so a second resume that
+            // races the network call finds the cooldown gate already
+            // tripped and exits — otherwise both runs proceed concurrently
+            // because the previous version updated the timestamp only on
+            // success completion. The cooldown thus doubles as a
+            // single-inflight guard for autoCheckForUpdatesIfNeeded.
+            val now = System.currentTimeMillis()
+            lastAutoCheckTimestamp = now
+            _state.update {
+                it.copy(isCheckingForUpdates = true, lastCheckedTimestamp = now)
+            }
             try {
                 syncInstalledAppsUseCase()
                 installedAppsRepository.checkAllForUpdates()
-                val now = System.currentTimeMillis()
-                lastAutoCheckTimestamp = now
-                _state.update { it.copy(lastCheckedTimestamp = now) }
             } catch (e: Exception) {
                 logger.error("Check all for updates failed: ${e.message}")
             } finally {
