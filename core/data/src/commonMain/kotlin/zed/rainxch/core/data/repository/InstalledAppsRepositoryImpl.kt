@@ -519,6 +519,19 @@ class InstalledAppsRepositoryImpl(
             ),
         )
 
+        // Recompute `isUpdateAvailable` against the EXISTING upstream
+        // `latestVersion` snapshot, not the freshly installed tag. When
+        // the user explicitly picks an older release (#542 reporter
+        // scenario) `newTag` < `latestVersion`, so the row still has
+        // an upstream update pending and the badge must NOT be cleared.
+        // The previous write stamped `latest* = new*` which then poisoned
+        // the `checkForUpdates` versionCode-parity canary into reporting
+        // "up to date" forever.
+        val snapshotLatestVersion = app.latestVersion
+        val isUpdateStillAvailable =
+            !snapshotLatestVersion.isNullOrBlank() &&
+                VersionMath.isVersionNewer(snapshotLatestVersion, newTag)
+
         installedAppsDao.updateApp(
             app.copy(
                 installedVersion = newTag,
@@ -526,12 +539,7 @@ class InstalledAppsRepositoryImpl(
                 installedAssetUrl = newAssetUrl,
                 installedVersionName = newVersionName,
                 installedVersionCode = newVersionCode,
-                latestVersion = newTag,
-                latestAssetName = newAssetName,
-                latestAssetUrl = newAssetUrl,
-                latestVersionName = newVersionName,
-                latestVersionCode = newVersionCode,
-                isUpdateAvailable = false,
+                isUpdateAvailable = isUpdateStillAvailable,
                 isPendingInstall = isPendingInstall,
                 lastUpdatedAt = System.currentTimeMillis(),
                 lastCheckedAt = System.currentTimeMillis(),
