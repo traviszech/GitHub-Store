@@ -93,7 +93,17 @@ class RootServiceManager(
                 Logger.w(TAG) { "installPackage() — no su binary available" }
                 return@withContext null
             }
+            // The whole string gets injected into a `su -c '<cmd>'` shell —
+            // refuse anything that isn't a strictly conformant Android
+            // package name so a malformed user-supplied installer
+            // attribution can't smuggle shell metacharacters past us.
             val safeInstaller = installerPackageName?.takeIf { it.isNotBlank() }
+            if (safeInstaller != null && !PACKAGE_NAME_PATTERN.matches(safeInstaller)) {
+                Logger.w(TAG) {
+                    "installPackage() — rejecting non-conformant installerPackageName='$safeInstaller'"
+                }
+                return@withContext STATUS_FAILURE
+            }
             val pm = "/system/bin/pm"
             // Always shell out the full pm path — some Magisk modules /
             // KernelSU configurations strip `/system/bin` from the minimal
@@ -112,6 +122,33 @@ class RootServiceManager(
                 Logger.e(TAG) { "installPackage() — su exec failed: ${e.message}" }
                 return@withContext null
             }
+
+            // Drain stdout and stderr concurrently with the stdin pump
+            // because `readText()` blocks until EOF — if pm keeps the pipes
+            // open while waiting for stdin, calling `readText()` BEFORE
+            // `waitFor()` deadlocks the process and the install timeout
+            // never fires (the read just hangs forever inside the read
+            // syscall).
+            val stdoutBuf = StringBuilder()
+            val stderrBuf = StringBuilder()
+            val stdoutThread = Thread {
+                try {
+                    BufferedReader(InputStreamReader(proc.inputStream)).use { reader ->
+                        reader.forEachLine { stdoutBuf.append(it).append('\n') }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+            val stderrThread = Thread {
+                try {
+                    BufferedReader(InputStreamReader(proc.errorStream)).use { reader ->
+                        reader.forEachLine { stderrBuf.append(it).append('\n') }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+            stdoutThread.start()
+            stderrThread.start()
 
             val pipeError = StringBuilder()
             val pipeThread = Thread {
@@ -132,17 +169,27 @@ class RootServiceManager(
                 Logger.e(TAG) { "installPackage() — pipe thread still alive after ${INSTALL_TIMEOUT_SECONDS}s, destroying process" }
                 pipeThread.interrupt()
                 proc.destroyForcibly()
+                stdoutThread.join(READER_DRAIN_TIMEOUT_MS)
+                stderrThread.join(READER_DRAIN_TIMEOUT_MS)
                 return@withContext STATUS_FAILURE
             }
 
-            val stdout = BufferedReader(InputStreamReader(proc.inputStream)).readText().trim()
-            val stderr = BufferedReader(InputStreamReader(proc.errorStream)).readText().trim()
             val finished = proc.waitFor(INSTALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             if (!finished) {
                 Logger.e(TAG) { "installPackage() — pm process timed out, destroying" }
                 proc.destroyForcibly()
+                stdoutThread.join(READER_DRAIN_TIMEOUT_MS)
+                stderrThread.join(READER_DRAIN_TIMEOUT_MS)
                 return@withContext STATUS_FAILURE
             }
+            // Reader threads will see EOF now that the process is gone;
+            // wait for them with a short cap so a stuck pipe never blocks
+            // us indefinitely.
+            stdoutThread.join(READER_DRAIN_TIMEOUT_MS)
+            stderrThread.join(READER_DRAIN_TIMEOUT_MS)
+
+            val stdout = stdoutBuf.toString().trim()
+            val stderr = stderrBuf.toString().trim()
             val exit = proc.exitValue()
             Logger.d(TAG) { "installPackage() — exit=$exit stdout='$stdout' stderr='$stderr'" }
             if (exit == 0 && stdout.contains("Success")) {
@@ -156,15 +203,33 @@ class RootServiceManager(
     suspend fun uninstallPackage(packageName: String): Int? =
         withContext(Dispatchers.IO) {
             val su = cachedSuPath ?: locateSuBinary() ?: return@withContext null
+            if (!PACKAGE_NAME_PATTERN.matches(packageName)) {
+                Logger.w(TAG) {
+                    "uninstallPackage() — rejecting non-conformant packageName='$packageName'"
+                }
+                return@withContext STATUS_FAILURE
+            }
             val command = "/system/bin/pm uninstall $packageName"
             try {
                 val proc = Runtime.getRuntime().exec(arrayOf(su, "-c", command))
-                val stdout = BufferedReader(InputStreamReader(proc.inputStream)).readText().trim()
+                val stdoutBuf = StringBuilder()
+                val stdoutThread = Thread {
+                    try {
+                        BufferedReader(InputStreamReader(proc.inputStream)).use { reader ->
+                            reader.forEachLine { stdoutBuf.append(it).append('\n') }
+                        }
+                    } catch (_: Exception) {
+                    }
+                }
+                stdoutThread.start()
                 val finished = proc.waitFor(UNINSTALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 if (!finished) {
                     proc.destroyForcibly()
+                    stdoutThread.join(READER_DRAIN_TIMEOUT_MS)
                     return@withContext STATUS_FAILURE
                 }
+                stdoutThread.join(READER_DRAIN_TIMEOUT_MS)
+                val stdout = stdoutBuf.toString().trim()
                 val exit = proc.exitValue()
                 Logger.d(TAG) { "uninstallPackage($packageName) — exit=$exit stdout='$stdout'" }
                 if (exit == 0 && stdout.contains("Success")) STATUS_SUCCESS else STATUS_FAILURE
@@ -228,6 +293,13 @@ class RootServiceManager(
         private const val UNINSTALL_TIMEOUT_SECONDS = 30L
         private const val PROBE_TIMEOUT_SECONDS = 5L
         private const val PROMPT_TIMEOUT_SECONDS = 60L
+        private const val READER_DRAIN_TIMEOUT_MS = 1_000L
+
+        // Strict Android package-name shape — letters, digits, underscores
+        // separated by dots, must start with a letter. Used to reject
+        // anything that could carry shell metacharacters into `su -c`.
+        private val PACKAGE_NAME_PATTERN =
+            Regex("""^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$""")
 
         private val SU_PATHS =
             listOf(
