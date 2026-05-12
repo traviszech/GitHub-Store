@@ -1128,4 +1128,14 @@
     <string name="skipped_updates_unskip_action">এড়িয়ে যাবেন না</string>
     <string name="skipped_updates_unskipped_snackbar">%1$s এর জন্য আপডেট প্রম্পট আবার চালু</string>
     <string name="skipped_updates_unskip_failure">পছন্দ আপডেট করা যায়নি</string>
+    <string name="hidden_repositories_title">লুকানো রিপোজিটরি</string>
+    <string name="hidden_repositories_entry_description">হোম ও সার্চ থেকে লুকানো রিপোজিটরি পরিচালনা করুন।</string>
+    <string name="hidden_repositories_count">%1$d লুকানো</string>
+    <string name="hidden_repositories_empty_title">কোনো লুকানো রিপোজিটরি নেই</string>
+    <string name="hidden_repositories_empty_description">হোম বা সার্চে রিপোজিটরি কার্ডে দীর্ঘক্ষণ চাপ দিয়ে আবিষ্কার থেকে লুকান।</string>
+    <string name="hidden_repositories_unhide_action">দেখান</string>
+    <string name="hidden_repositories_unhide_all">সব দেখান</string>
+    <string name="hidden_repositories_unhidden_snackbar">%1$s এখন দৃশ্যমান</string>
+    <string name="hidden_repositories_unhidden_all_snackbar">সব রিপোজিটরি দৃশ্যমান</string>
+    <string name="hidden_repositories_unhide_failure">দৃশ্যমান করা যায়নি। আবার চেষ্টা করুন।</string>
 </resources>

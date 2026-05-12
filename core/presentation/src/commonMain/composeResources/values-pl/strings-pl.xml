@@ -1121,4 +1121,14 @@
     <string name="skipped_updates_unskip_action">Nie pomijaj</string>
     <string name="skipped_updates_unskipped_snackbar">Powiadomienie włączone dla %1$s</string>
     <string name="skipped_updates_unskip_failure">Nie udało się zmienić preferencji</string>
+    <string name="hidden_repositories_title">Ukryte repozytoria</string>
+    <string name="hidden_repositories_entry_description">Zarządzaj repozytoriami ukrytymi na Ekranie głównym i w Wyszukiwarce.</string>
+    <string name="hidden_repositories_count">%1$d ukryte</string>
+    <string name="hidden_repositories_empty_title">Brak ukrytych repozytoriów</string>
+    <string name="hidden_repositories_empty_description">Przytrzymaj kartę repozytorium na Ekranie głównym lub w Wyszukiwarce, aby ukryć ją z odkrywania.</string>
+    <string name="hidden_repositories_unhide_action">Pokaż</string>
+    <string name="hidden_repositories_unhide_all">Pokaż wszystkie</string>
+    <string name="hidden_repositories_unhidden_snackbar">%1$s znów widoczne</string>
+    <string name="hidden_repositories_unhidden_all_snackbar">Wszystkie repozytoria znów widoczne</string>
+    <string name="hidden_repositories_unhide_failure">Nie udało się pokazać. Spróbuj ponownie.</string>
 </resources>

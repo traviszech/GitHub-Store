@@ -1152,4 +1152,14 @@
     <string name="skipped_updates_unskip_action">إلغاء التخطّي</string>
     <string name="skipped_updates_unskipped_snackbar">تم تفعيل الإشعار لـ %1$s</string>
     <string name="skipped_updates_unskip_failure">تعذّر تحديث التفضيل</string>
+    <string name="hidden_repositories_title">المستودعات المخفية</string>
+    <string name="hidden_repositories_entry_description">إدارة المستودعات التي أخفيتها من الرئيسية والبحث.</string>
+    <string name="hidden_repositories_count">%1$d مخفي</string>
+    <string name="hidden_repositories_empty_title">لا توجد مستودعات مخفية</string>
+    <string name="hidden_repositories_empty_description">اضغط مطولاً على بطاقة مستودع في الرئيسية أو البحث لإخفائه من الاستكشاف.</string>
+    <string name="hidden_repositories_unhide_action">إظهار</string>
+    <string name="hidden_repositories_unhide_all">إظهار الكل</string>
+    <string name="hidden_repositories_unhidden_snackbar">تم إظهار %1$s</string>
+    <string name="hidden_repositories_unhidden_all_snackbar">تم إظهار جميع المستودعات</string>
+    <string name="hidden_repositories_unhide_failure">تعذر الإظهار. حاول مرة أخرى.</string>
 </resources>

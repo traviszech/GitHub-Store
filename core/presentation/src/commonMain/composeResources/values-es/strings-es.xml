@@ -1100,4 +1100,14 @@
     <string name="skipped_updates_unskip_action">No saltar</string>
     <string name="skipped_updates_unskipped_snackbar">Aviso de actualización reactivado para %1$s</string>
     <string name="skipped_updates_unskip_failure">No se pudo actualizar la preferencia</string>
+    <string name="hidden_repositories_title">Repositorios ocultos</string>
+    <string name="hidden_repositories_entry_description">Gestiona los repositorios que ocultaste de Inicio y Búsqueda.</string>
+    <string name="hidden_repositories_count">%1$d oculto(s)</string>
+    <string name="hidden_repositories_empty_title">Sin repositorios ocultos</string>
+    <string name="hidden_repositories_empty_description">Mantén pulsada una tarjeta de repositorio en Inicio o Búsqueda para ocultarla.</string>
+    <string name="hidden_repositories_unhide_action">Mostrar</string>
+    <string name="hidden_repositories_unhide_all">Mostrar todos</string>
+    <string name="hidden_repositories_unhidden_snackbar">%1$s vuelto a mostrar</string>
+    <string name="hidden_repositories_unhidden_all_snackbar">Todos los repositorios mostrados</string>
+    <string name="hidden_repositories_unhide_failure">No se pudo mostrar. Inténtalo de nuevo.</string>
 </resources>
