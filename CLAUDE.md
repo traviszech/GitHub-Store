@@ -90,6 +90,10 @@ Kotlin 2.3.10, Compose Multiplatform 1.10.3, Ktor 3.4.0, Room 2.8.4, Koin 4.1.1,
 - **caveman** — session default, terse output.
 - **karpathy-guidelines** — anti-overcomplication, minimal diffs, surface assumptions, verifiable success criteria. Every coding task.
 - **one-skill-to-rule-them-all** — watch for skill-capture opportunities during multi-step work.
+- **gsd-inbox** - Triage open GitHub issues + PRs against templates. Our exact pattern — automate the "check issue #N, draft reply, ship fix" loop.
+- **gsd-ship** - Create PR + review + prep for merge. Every task ends here.
+- **gsd-quick** - Trivial task with atomic commits + state tracking. Matches our small-commit policy.
+- **gsd-debug** - Systematic debugging with persistent state across context resets. For bug-hunt cycles.
 - **android-* skills** (`~/.claude/skills/android/`) — auto-fire by description match; apply when in matching domain:
   - `android-compose-ui` — composables, recomposition, animations, modifiers, design system
   - `android-data-layer` — repos, DTOs, Room, Ktor, mappers
