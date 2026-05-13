@@ -1156,4 +1156,6 @@
     <string name="platform_section_macos">macOS</string>
     <string name="platform_section_linux">Linux</string>
     <string name="saved_for_transfer_hint">Diğer platform — aktarma için kaydetmek üzere tarayıcıda açılır</string>
+    <string name="section_chip_your_device">Cihazınız</string>
+    <string name="section_chip_for_transfer">Aktarım için</string>
 </resources>

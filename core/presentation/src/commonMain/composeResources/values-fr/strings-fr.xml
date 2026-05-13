@@ -1120,4 +1120,6 @@
     <string name="platform_section_macos">macOS</string>
     <string name="platform_section_linux">Linux</string>
     <string name="saved_for_transfer_hint">Autre plateforme — s\'ouvre dans le navigateur pour enregistrement et transfert</string>
+    <string name="section_chip_your_device">Votre appareil</string>
+    <string name="section_chip_for_transfer">Pour transfert</string>
 </resources>

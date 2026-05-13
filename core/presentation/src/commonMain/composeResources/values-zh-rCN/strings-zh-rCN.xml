@@ -1116,4 +1116,6 @@
     <string name="platform_section_macos">macOS</string>
     <string name="platform_section_linux">Linux</string>
     <string name="saved_for_transfer_hint">其他平台 — 在浏览器中打开以保存并转移</string>
+    <string name="section_chip_your_device">你的设备</string>
+    <string name="section_chip_for_transfer">用于转移</string>
 </resources>

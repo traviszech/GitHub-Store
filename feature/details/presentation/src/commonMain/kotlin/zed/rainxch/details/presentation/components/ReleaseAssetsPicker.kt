@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -217,37 +220,52 @@ private fun ReleaseAssetsItemsPicker(
             // changes every Details screen's picker behaviour for this
             // user. Off = current-OS assets only; On = grouped sections
             // for Android / Windows / macOS / Linux.
-            Row(
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = stringResource(Res.string.show_all_platforms_label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                androidx.compose.material3.Switch(
-                    checked = showAllPlatforms,
-                    onCheckedChange = { onToggleShowAllPlatforms() },
-                )
+                Row(
+                    modifier =
+                        Modifier
+                            .clickable(onClick = onToggleShowAllPlatforms)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Devices,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(Modifier.size(12.dp))
+                    Text(
+                        text = stringResource(Res.string.show_all_platforms_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.Switch(
+                        checked = showAllPlatforms,
+                        onCheckedChange = { onToggleShowAllPlatforms() },
+                    )
+                }
             }
-
-            HorizontalDivider()
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (showAllPlatforms) {
                     // Group all known-platform assets by detected OS,
-                    // emit a labelled section per group. Installable
-                    // assets keep their normal select-to-install flow;
-                    // other-platform assets route to a browser download
-                    // for transfer to another device.
+                    // render one collapsible-feeling Card per platform
+                    // with a single header chip telling the user whether
+                    // the section installs locally or saves for transfer.
+                    // One hint per section >> one hint per asset row
+                    // (which scaled badly: 10 assets = 10 redundant lines).
                     val groups: Map<zed.rainxch.core.domain.model.DiscoveryPlatform, List<GithubAsset>> =
                         crossPlatformAssets
                             .groupBy {
@@ -266,54 +284,37 @@ private fun ReleaseAssetsItemsPicker(
                             )
                         }
                     } else {
-                        val ordered =
+                        // Order: current-platform section first (it's the
+                        // primary install target), then the others.
+                        val installableIds = assetsList.map { it.id }.toSet()
+                        val sectionOrder =
                             listOf(
                                 zed.rainxch.core.domain.model.DiscoveryPlatform.Android to Res.string.platform_section_android,
                                 zed.rainxch.core.domain.model.DiscoveryPlatform.Windows to Res.string.platform_section_windows,
                                 zed.rainxch.core.domain.model.DiscoveryPlatform.Macos to Res.string.platform_section_macos,
                                 zed.rainxch.core.domain.model.DiscoveryPlatform.Linux to Res.string.platform_section_linux,
-                            )
-                        ordered.forEach { (platform, labelRes) ->
+                            ).sortedByDescending { (platform, _) ->
+                                groups[platform]?.any { it.id in installableIds } == true
+                            }
+                        sectionOrder.forEach { (platform, labelRes) ->
                             val assets = groups[platform].orEmpty()
                             if (assets.isEmpty()) return@forEach
+                            val isCurrentDevice =
+                                assets.any { it.id in installableIds }
                             item(key = "section-${platform.name}") {
-                                Text(
-                                    text = stringResource(labelRes),
-                                    style = MaterialTheme.typography.labelLargeEmphasized,
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                            }
-                            items(items = assets, key = { it.id }) { asset ->
-                                val isInstallableHere =
-                                    assetsList.any { it.id == asset.id }
-                                ReleaseAssetItem(
-                                    asset = asset,
-                                    isSelected = asset.id == selectedAsset?.id && isInstallableHere,
-                                    isPinned = false,
-                                    onClick = {
-                                        if (isInstallableHere) {
+                                PlatformSectionCard(
+                                    platformLabel = stringResource(labelRes),
+                                    isCurrentDevice = isCurrentDevice,
+                                    assets = assets,
+                                    selectedAsset = selectedAsset,
+                                    onAssetClick = { asset ->
+                                        if (asset.id in installableIds) {
                                             onSelect(asset)
                                         } else {
                                             onDownloadForTransfer(asset)
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth(),
                                 )
-                                if (!isInstallableHere) {
-                                    Text(
-                                        text = stringResource(Res.string.saved_for_transfer_hint),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 24.dp, vertical = 2.dp),
-                                    )
-                                }
                             }
                         }
                     }
@@ -477,4 +478,108 @@ private fun ReleaseAssetsPickerItemPreview() {
         onClick = {},
         isSelected = false,
     )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PlatformSectionCard(
+    platformLabel: String,
+    isCurrentDevice: Boolean,
+    assets: List<GithubAsset>,
+    selectedAsset: GithubAsset?,
+    onAssetClick: (GithubAsset) -> Unit,
+) {
+    OutlinedCard(
+        colors =
+            CardDefaults.outlinedCardColors(
+                containerColor =
+                    if (isCurrentDevice) {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLowest
+                    },
+            ),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = platformLabel,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            SectionChip(
+                label =
+                    if (isCurrentDevice) {
+                        stringResource(Res.string.section_chip_your_device)
+                    } else {
+                        stringResource(Res.string.section_chip_for_transfer)
+                    },
+                isPrimary = isCurrentDevice,
+            )
+        }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+
+        assets.forEachIndexed { index, asset ->
+            ReleaseAssetItem(
+                asset = asset,
+                isSelected =
+                    isCurrentDevice &&
+                        asset.id == selectedAsset?.id,
+                isPinned = false,
+                onClick = { onAssetClick(asset) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (index < assets.lastIndex) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionChip(
+    label: String,
+    isPrimary: Boolean,
+) {
+    val container =
+        if (isPrimary) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.tertiaryContainer
+        }
+    val content =
+        if (isPrimary) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        }
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = container,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = content,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+        )
+    }
 }

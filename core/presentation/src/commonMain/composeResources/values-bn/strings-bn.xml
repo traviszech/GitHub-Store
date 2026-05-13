@@ -1147,4 +1147,6 @@
     <string name="platform_section_macos">macOS</string>
     <string name="platform_section_linux">Linux</string>
     <string name="saved_for_transfer_hint">অন্য প্ল্যাটফর্ম — ট্রান্সফারের জন্য সংরক্ষণে ব্রাউজারে খুলবে</string>
+    <string name="section_chip_your_device">আপনার ডিভাইস</string>
+    <string name="section_chip_for_transfer">ট্রান্সফারের জন্য</string>
 </resources>

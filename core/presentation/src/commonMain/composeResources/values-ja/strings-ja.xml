@@ -1114,4 +1114,6 @@
     <string name="platform_section_macos">macOS</string>
     <string name="platform_section_linux">Linux</string>
     <string name="saved_for_transfer_hint">他のプラットフォーム — ブラウザで開き、転送用に保存します</string>
+    <string name="section_chip_your_device">このデバイス</string>
+    <string name="section_chip_for_transfer">転送用</string>
 </resources>
