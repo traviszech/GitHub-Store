@@ -8,7 +8,8 @@
       "type": "NEW",
       "bullets": [
         "Установка на macOS через Homebrew — `brew install --cask github-store` из нашего нового tap.",
-        "Добавлено зеркало сообщества fastly.jsdelivr.net. Полезно, когда GitHub ограничен."
+        "Добавлено зеркало сообщества fastly.jsdelivr.net. Полезно, когда GitHub ограничен.",
+        "Присоединились к коалиции Keep Android Open — баннер на Apps объясняет."
       ]
     },
     {

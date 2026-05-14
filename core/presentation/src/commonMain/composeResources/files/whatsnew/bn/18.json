@@ -8,7 +8,8 @@
       "type": "NEW",
       "bullets": [
         "Homebrew দিয়ে macOS-এ ইনস্টল করুন — আমাদের নতুন tap থেকে `brew install --cask github-store`।",
-        "কমিউনিটি মিরর হিসেবে fastly.jsdelivr.net যোগ করা হয়েছে। GitHub সীমাবদ্ধ থাকলে কাজে আসে।"
+        "কমিউনিটি মিরর হিসেবে fastly.jsdelivr.net যোগ করা হয়েছে। GitHub সীমাবদ্ধ থাকলে কাজে আসে।",
+        "Keep Android Open কোয়ালিশনে যোগ দিয়েছি — Apps-এ ব্যানার ব্যাখ্যা করে।"
       ]
     },
     {

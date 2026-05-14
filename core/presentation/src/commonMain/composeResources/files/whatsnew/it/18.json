@@ -8,7 +8,8 @@
       "type": "NEW",
       "bullets": [
         "Installazione macOS con Homebrew — `brew install --cask github-store` dal nostro nuovo tap.",
-        "Aggiunto fastly.jsdelivr.net come mirror della community. Utile quando GitHub è limitato."
+        "Aggiunto fastly.jsdelivr.net come mirror della community. Utile quando GitHub è limitato.",
+        "Aderito alla coalizione Keep Android Open — un banner in-app su Apps lo spiega."
       ]
     },
     {

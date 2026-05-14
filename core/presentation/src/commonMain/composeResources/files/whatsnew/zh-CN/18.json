@@ -8,7 +8,8 @@
       "type": "NEW",
       "bullets": [
         "通过 Homebrew 在 macOS 上安装 — 从我们的新 tap 运行 `brew install --cask github-store`。",
-        "新增社区镜像 fastly.jsdelivr.net。GitHub 受限时很有用。"
+        "新增社区镜像 fastly.jsdelivr.net。GitHub 受限时很有用。",
+        "加入 Keep Android Open 联盟 — Apps 上的横幅说明原因。"
       ]
     },
     {
