@@ -88,17 +88,13 @@ class FavouritesViewModel(
     @OptIn(ExperimentalTime::class)
     fun onAction(action: FavouritesAction) {
         when (action) {
-            FavouritesAction.OnNavigateBackClick -> {
-                // Handled in composable
-            }
+            FavouritesAction.OnNavigateBackClick -> Unit
 
-            is FavouritesAction.OnRepositoryClick -> {
-                // Handled in composable
-            }
+            is FavouritesAction.OnRepositoryClick -> Unit
 
-            is FavouritesAction.OnDeveloperProfileClick -> {
-                // Handled in composable
-            }
+            is FavouritesAction.OnDeveloperProfileClick -> Unit
+
+            FavouritesAction.OnImportStarsClick -> Unit
 
             is FavouritesAction.OnSearchChange -> {
                 _state.update { it.copy(searchQuery = action.query) }

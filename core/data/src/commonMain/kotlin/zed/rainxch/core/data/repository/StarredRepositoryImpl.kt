@@ -87,6 +87,92 @@ class StarredRepositoryImpl(
             }
         }
 
+    override suspend fun fetchStarredForUsername(
+        username: String,
+    ): Result<List<zed.rainxch.core.domain.model.StarredRepository>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val sanitized = username.trim().trimStart('@')
+                if (sanitized.isEmpty()) {
+                    return@withContext Result.failure(IllegalArgumentException("Username is empty"))
+                }
+
+                val allRepos = mutableListOf<GitHubStarredResponse>()
+                var page = 1
+                val perPage = 100
+
+                while (true) {
+                    val response =
+                        httpClient.get("/users/$sanitized/starred") {
+                            parameter("per_page", perPage)
+                            parameter("page", page)
+                        }
+
+                    if (!response.status.isSuccess()) {
+                        val reason = when (response.status.value) {
+                            404 -> "User '$sanitized' not found."
+                            403 -> "GitHub rate limit reached. Try again later or sign in."
+                            else -> "Failed to fetch stars: ${response.status.description}"
+                        }
+                        return@withContext Result.failure(Exception(reason))
+                    }
+
+                    val repos: List<GitHubStarredResponse> = response.body()
+                    if (repos.isEmpty()) break
+                    allRepos.addAll(repos)
+                    if (repos.size < perPage) break
+                    page++
+                }
+
+                val now = Clock.System.now().toEpochMilliseconds()
+                val results = coroutineScope {
+                    val semaphore = Semaphore(25)
+                    allRepos.map { repo ->
+                        async {
+                            semaphore.withPermit {
+                                val release =
+                                    checkForValidAssets(repo.owner.login, repo.name, ::matchesAnyPlatform)
+                                        ?: return@withPermit null
+                                val installedApps = installedAppsDao.getAppsByRepoId(repo.id)
+                                val firstInstalled =
+                                    installedApps.firstOrNull { !it.isPendingInstall }
+                                zed.rainxch.core.domain.model.StarredRepository(
+                                    repoId = repo.id,
+                                    repoName = repo.name,
+                                    repoOwner = repo.owner.login,
+                                    repoOwnerAvatarUrl = repo.owner.avatarUrl,
+                                    repoDescription = repo.description,
+                                    primaryLanguage = repo.language,
+                                    repoUrl = repo.htmlUrl,
+                                    stargazersCount = repo.stargazersCount,
+                                    forksCount = repo.forksCount,
+                                    openIssuesCount = repo.openIssuesCount,
+                                    isInstalled = firstInstalled != null,
+                                    installedPackageName = firstInstalled?.packageName,
+                                    latestVersion = release.version,
+                                    latestReleaseUrl = release.url,
+                                    starredAt = repo.starredAt?.let {
+                                        Instant.parse(it).toEpochMilliseconds()
+                                    },
+                                    addedAt = now,
+                                    lastSyncedAt = now,
+                                )
+                            }
+                        }
+                    }.awaitAll().filterNotNull()
+                }
+
+                Result.success(results)
+            } catch (e: RateLimitException) {
+                throw e
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Logger.e(e) { "Failed to fetch starred for username" }
+                Result.failure(e)
+            }
+        }
+
     override suspend fun getLastSyncTime(): Long? = starredRepoDao.getLastSyncTime()
 
     override suspend fun needsSync(): Boolean {
@@ -206,9 +292,17 @@ class StarredRepositoryImpl(
         }
     }
 
+    private fun matchesAnyPlatform(assetName: String): Boolean {
+        val name = assetName.lowercase()
+        return name.endsWith(".apk") || name.endsWith(".msi") || name.endsWith(".exe") ||
+            name.endsWith(".dmg") || name.endsWith(".pkg") || name.endsWith(".appimage") ||
+            name.endsWith(".deb") || name.endsWith(".rpm") || name.endsWith(".pkg.tar.zst")
+    }
+
     private suspend fun checkForValidAssets(
         owner: String,
         repo: String,
+        matcher: (String) -> Boolean = ::matchesPlatform,
     ): StableReleaseInfo? {
         val backendResult = backendApiClient.getReleases(owner, repo, perPage = 10)
         backendResult.fold(
@@ -216,7 +310,7 @@ class StarredRepositoryImpl(
                 val stable = releases.firstOrNull { it.draft != true && it.prerelease != true }
                     ?: return null
                 if (stable.assets.isEmpty()) return null
-                return if (stable.assets.any { asset -> matchesPlatform(asset.name) }) {
+                return if (stable.assets.any { asset -> matcher(asset.name) }) {
                     StableReleaseInfo(version = stable.tagName, url = stable.htmlUrl)
                 } else {
                     null
@@ -250,27 +344,7 @@ class StarredRepositoryImpl(
             }
 
             val relevantAssets =
-                stableRelease.assets.filter { asset ->
-                    val name = asset.name.lowercase()
-                    when (platform) {
-                        Platform.ANDROID -> {
-                            name.endsWith(".apk")
-                        }
-
-                        Platform.WINDOWS -> {
-                            name.endsWith(".msi") || name.endsWith(".exe")
-                        }
-
-                        Platform.MACOS -> {
-                            name.endsWith(".dmg") || name.endsWith(".pkg")
-                        }
-
-                        Platform.LINUX -> {
-                            name.endsWith(".appimage") || name.endsWith(".deb") ||
-                                name.endsWith(".rpm") || name.endsWith(".pkg.tar.zst")
-                        }
-                    }
-                }
+                stableRelease.assets.filter { asset -> matcher(asset.name) }
 
             if (relevantAssets.isNotEmpty()) {
                 StableReleaseInfo(version = stableRelease.tagName, url = stableRelease.htmlUrl)

@@ -12,6 +12,8 @@ interface StarredRepository {
 
     suspend fun syncStarredRepos(forceRefresh: Boolean = false): Result<Unit>
 
+    suspend fun fetchStarredForUsername(username: String): Result<List<StarredRepository>>
+
     suspend fun getLastSyncTime(): Long?
 
     suspend fun needsSync(): Boolean
